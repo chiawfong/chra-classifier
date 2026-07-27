@@ -14,9 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, ArrowLeft, FileDown, Lock, LogIn } from "lucide-react";
+import { AlertTriangle, ArrowLeft, FileDown, Lock } from "lucide-react";
 import { generateClassificationPDF } from "@/lib/pdf-export";
-import { useSession, signIn } from "next-auth/react";
 
 interface ClassificationResultsProps {
   output: MixtureClassificationOutput;
@@ -27,7 +26,6 @@ export function ClassificationResults({
   output,
   onBack,
 }: ClassificationResultsProps) {
-  const { data: session } = useSession();
   const { results, warnings, ingredients } = output;
 
   const uniquePictograms = [
@@ -66,23 +64,16 @@ export function ClassificationResults({
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Mixture
         </Button>
-        {session ? (
-          <Button
-            variant="outline"
-            onClick={() => {
-              const doc = generateClassificationPDF(output);
-              doc.save(`hazard-classification-${new Date().toISOString().slice(0, 10)}.pdf`);
-            }}
-          >
-            <FileDown className="mr-2 h-4 w-4" />
-            Export PDF
-          </Button>
-        ) : (
-          <Button variant="outline" onClick={() => signIn("google")}>
-            <LogIn className="mr-2 h-4 w-4" />
-            Sign in to Export PDF
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          onClick={() => {
+            const doc = generateClassificationPDF(output);
+            doc.save(`hazard-classification-${new Date().toISOString().slice(0, 10)}.pdf`);
+          }}
+        >
+          <FileDown className="mr-2 h-4 w-4" />
+          Export PDF
+        </Button>
       </div>
 
       {warnings.length > 0 && (

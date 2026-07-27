@@ -406,7 +406,7 @@ function renderProofs(doc: jsPDF, y: number, results: ClassificationResult[]): n
     if (r.proof.formula) {
       doc.setFont("helvetica", "italic");
       doc.setFontSize(FONT_SIZE.small);
-      doc.text(`Formula: ${stripTableRefs(r.proof.formula)}`, MARGIN + 2, y);
+      doc.text(`Formula: ${sanitizeForPDF(r.proof.formula)}`, MARGIN + 2, y);
       doc.setFont("helvetica", "normal");
       y += 4;
     }
@@ -415,29 +415,31 @@ function renderProofs(doc: jsPDF, y: number, results: ClassificationResult[]): n
     for (let si = 0; si < r.proof.steps.length; si++) {
       const step = r.proof.steps[si];
       const stepLines = [];
-      stepLines.push(`${si + 1}. ${stripTableRefs(step.description)}`);
-      if (step.calculation) stepLines.push(`   ${stripTableRefs(step.calculation)}`);
-      if (step.result) stepLines.push(`   => ${stripTableRefs(step.result)}`);
+      stepLines.push(`${si + 1}. ${sanitizeForPDF(step.description)}`);
+      if (step.calculation) stepLines.push(`   ${sanitizeForPDF(step.calculation)}`);
+      if (step.result) stepLines.push(`   => ${sanitizeForPDF(step.result)}`);
 
       const neededHeight = stepLines.length * LINE_HEIGHT;
       y = checkPageBreak(doc, y, neededHeight);
 
       for (const line of stepLines) {
-        doc.setFontSize(FONT_SIZE.small);
         if (line.startsWith("   =>")) {
+          doc.setFontSize(FONT_SIZE.body);
           doc.setFont("helvetica", "bold");
-          doc.setTextColor(0, 128, 0);
+          doc.setTextColor(0, 100, 0);
         } else if (line.startsWith("   ")) {
-          doc.setFont("courier", "normal");
-          doc.setTextColor(30, 80, 180);
+          doc.setFontSize(FONT_SIZE.body);
+          doc.setFont("courier", "bold");
+          doc.setTextColor(20, 60, 140);
         } else {
+          doc.setFontSize(FONT_SIZE.body);
           doc.setFont("helvetica", "normal");
           doc.setTextColor(0);
         }
         const wrapped = doc.splitTextToSize(line, CONTENT_WIDTH - 4);
         for (const wl of wrapped) {
           doc.text(wl, MARGIN + 2, y);
-          y += 3.5;
+          y += 4;
         }
       }
       y += 1;
@@ -450,14 +452,14 @@ function renderProofs(doc: jsPDF, y: number, results: ClassificationResult[]): n
     doc.setFontSize(FONT_SIZE.small);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(27, 94, 32);
-    doc.text(stripTableRefs(r.proof.conclusion), MARGIN + 3, y + 4);
+    doc.text(sanitizeForPDF(r.proof.conclusion), MARGIN + 3, y + 4);
     doc.setTextColor(0);
     y += 8;
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6);
     doc.setTextColor(100);
-    doc.text(`Reference: ${stripTableRefs(r.proof.reference)}`, MARGIN + 2, y);
+    doc.text(`Reference: ${sanitizeForPDF(r.proof.reference)}`, MARGIN + 2, y);
     doc.setTextColor(0);
     y += 6;
   }
@@ -505,6 +507,19 @@ function renderDisclaimer(doc: jsPDF, y: number) {
   doc.setTextColor(0);
 }
 
-function stripTableRefs(text: string): string {
-  return text.replace(/Table \d+\.\d+/g, (match) => match);
+function sanitizeForPDF(text: string): string {
+  return text
+    .replace(/Σ/g, "Sum")       // Σ → Sum
+    .replace(/∑/g, "Sum")       // ∑ → Sum
+    .replace(/≥/g, ">=")        // ≥ → >=
+    .replace(/≤/g, "<=")        // ≤ → <=
+    .replace(/→/g, "->")        // → → ->
+    .replace(/×/g, "x")         // × → x
+    .replace(/²/g, "^2")        // ² → ^2
+    .replace(/³/g, "^3")        // ³ → ^3
+    .replace(/–/g, "-")         // – → -
+    .replace(/—/g, "--")        // — → --
+    .replace(/’/g, "'")         // ' → '
+    .replace(/“/g, '"')         // " → "
+    .replace(/”/g, '"');        // " → "
 }

@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CHRA Classifier
 
-## Getting Started
+Chemical hazard classification web app for mixtures, based on Malaysia's
+**ICOP on Classification, Labelling and Safety Data Sheet of Hazardous Chemicals** (GHS-aligned).
 
-First, run the development server:
+**Live site:** https://chra-classifier.vercel.app/
+
+## What it does
+
+- Search a chemical (local DB + PubChem) and see its GHS classification.
+- Build a **mixture** (ingredients + concentrations) and classify the whole blend.
+- Shows the **proof** behind every result — formula, steps, and the ICOP table/section used.
+- Export the assessment to PDF.
+
+## Classification engine
+
+`src/lib/classification/`
+
+| Module | Handles | Core method |
+|--------|---------|-------------|
+| `acute-toxicity.ts` | Acute Tox. (oral/dermal/inhalation) | ATEmix additivity formula |
+| `concentration-limits.ts` | Health hazards (Skin/Eye, CMR, STOT, Sens., Asp.) | Concentration cut-off limits |
+| `physical-hazards.ts` | Flammability, oxidiser, etc. | Test data / ingredient rules |
+| `environmental-hazards.ts` | Aquatic toxicity | Summation + additivity |
+| `index.ts` | Orchestrates all of the above | — |
+
+## Dev
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev     # http://localhost:3000
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Auth (Google sign-in via NextAuth) is wired up but **disabled** for the testing
+phase — see `src/lib/auth.ts`. Re-enable by setting the Google OAuth env vars
+when going live.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Auto-deploys to Vercel from the connected GitHub repo.
